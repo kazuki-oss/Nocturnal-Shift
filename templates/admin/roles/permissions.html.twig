@@ -1,0 +1,98 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}権限設定 - {{ role.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">権限設定 - {{ role.name }}</h2>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    <form method="post" class="permissions-form">
+        <div class="form-section">
+            <h3 class="form-section-title">権限一覧</h3>
+            <p class="form-help">このロールに付与する権限を選択してください。</p>
+            
+            <div class="permissions-grid">
+                {% for permission in allPermissions %}
+                    <label class="permission-item">
+                        <input 
+                            type="checkbox" 
+                            name="permissions[]" 
+                            value="{{ permission.id }}"
+                            {% if permission in role.permissions %}checked{% endif %}
+                        >
+                        <div class="permission-info">
+                            <strong>{{ permission.name }}</strong>
+                            <code>{{ permission.identifier }}</code>
+                        </div>
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ path('admin_roles_index') }}" class="btn btn-secondary">
+                <i class="mdi mdi-close"></i> キャンセル
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="mdi mdi-content-save"></i> 保存
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.permissions-form {
+    padding: 1.5rem;
+}
+
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.permission-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.permission-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary-color);
+}
+
+.permission-item input[type="checkbox"] {
+    margin-top: 0.25rem;
+    cursor: pointer;
+}
+
+.permission-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.permission-info strong {
+    color: var(--text-color);
+}
+
+.permission-info code {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}

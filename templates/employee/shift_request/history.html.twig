@@ -1,0 +1,117 @@
+{% extends 'employee/layout.html.twig' %}
+
+{% block title %}シフト希望履歴{% endblock %}
+
+{% block employee_content %}
+<div class="page-header mb-4">
+    <h2 class="page-title">シフト希望履歴</h2>
+    <a href="{{ path('employee_shift_request_index') }}" class="btn btn-primary">
+        <i class="mdi mdi-plus"></i> 新規作成
+    </a>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    {% if requests is empty %}
+        <div class="p-4 text-center text-muted">
+            まだシフト希望を提出していません。
+        </div>
+    {% else %}
+        <div class="request-list">
+            {% for request in requests %}
+                <div class="request-item">
+                    <div class="request-header">
+                        <h4>{{ request.targetMonth|date('Y年m月') }}</h4>
+                        <span class="status-badge status-{{ request.status }}">
+                            {% if request.status == 'draft' %}下書き
+                            {% elseif request.status == 'submitted' %}提出済み
+                            {% elseif request.status == 'approved' %}承認済み
+                            {% elseif request.status == 'rejected' %}却下
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="request-meta">
+                        <span><i class="mdi mdi-calendar"></i> 提出日: {{ request.submittedAt|date('Y/m/d H:i') }}</span>
+                    </div>
+                    <div class="request-summary">
+                        勤務可能日: 
+                        {% set availableDays = 0 %}
+                        {% for date, data in request.requestDetails %}
+                            {% if data.available is defined and data.available %}
+                                {% set availableDays = availableDays + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ availableDays }}日
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.request-list {
+    padding: 1rem;
+}
+
+.request-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.request-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-draft {
+    background: rgba(156, 163, 175, 0.2);
+    color: #9ca3af;
+}
+
+.status-submitted {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.status-approved {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+}
+
+.status-rejected {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.request-meta {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.request-summary {
+    font-weight: 500;
+}
+</style>
+{% endblock %}

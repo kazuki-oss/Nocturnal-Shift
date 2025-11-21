@@ -1,0 +1,264 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}シフト希望一覧{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">シフト希望一覧</h2>
+    <a href="{{ path('admin_schedule_index') }}" class="btn btn-secondary">
+        <i class="mdi mdi-calendar"></i> カレンダー
+    </a>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>従業員</th>
+                <th>対象月</th>
+                <th>提出日</th>
+                <th>勤務可能日数</th>
+                <th>ステータス</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if requests is empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">シフト希望の提出はありません。</td>
+                </tr>
+            {% else %}
+                {% for request in requests %}
+                    <tr>
+                        <td>{{ request.user.name }}</td>
+                        <td>{{ request.targetMonth|date('Y年m月') }}</td>
+                        <td>{{ request.submittedAt|date('Y/m/d H:i') }}</td>
+                        <td>
+                            {% set availableDays = 0 %}
+                            {% for date, data in request.requestDetails %}
+                                {% if data.available is defined and data.available %}
+                                    {% set availableDays = availableDays + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ availableDays }}日
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ request.status }}">
+                                {% if request.status == 'submitted' %}提出済み
+                                {% elseif request.status == 'approved' %}承認済み
+                                {% elseif request.status == 'rejected' %}却下
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            {% if request.status == 'submitted' %}
+                                <form method="post" action="{{ path('admin_schedule_approve', {id: request.id}) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-success" title="承認">
+                                        <i class="mdi mdi-check"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('admin_schedule_reject', {id: request.id}) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="却下">
+                                        <i class="mdi mdi-close"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-info" onclick="showDetails({{ request.id }})" title="詳細">
+                                <i class="mdi mdi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 詳細モーダル -->
+<div id="details-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>シフト希望詳細</h3>
+            <button class="modal-close" onclick="closeDetailsModal()">
+                <i class="mdi mdi-close"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="details-body">
+            <!-- 詳細がここに表示されます -->
+        </div>
+    </div>
+</div>
+
+<style>
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-submitted {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.status-approved {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+}
+
+.status-rejected {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-success {
+    background: #22c55e;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #16a34a;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-info {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #2563eb;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.detail-item {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.detail-date {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.detail-time {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+const requestsData = {{ requests|json_encode|raw }};
+
+function showDetails(requestId) {
+    const request = requestsData.find(r => r.id === requestId);
+    if (!request) return;
+    
+    const modal = document.getElementById('details-modal');
+    const body = document.getElementById('details-body');
+    
+    let html = `
+        <div style="margin-bottom: 1rem;">
+            <strong>従業員:</strong> ${request.user.name}<br>
+            <strong>対象月:</strong> ${new Date(request.targetMonth.date).toLocaleDateString('ja-JP', {year: 'numeric', month: 'long'})}
+        </div>
+        <div><strong>勤務可能日:</strong></div>
+    `;
+    
+    const details = request.requestDetails || {};
+    for (const [date, data] of Object.entries(details)) {
+        if (data.available) {
+            const dateObj = new Date(date);
+            const dayName = dateObj.toLocaleDateString('ja-JP', { weekday: 'short' });
+            html += `
+                <div class="detail-item">
+                    <div class="detail-date">${date} (${dayName})</div>
+                    <div class="detail-time">${data.start || '-'} ～ ${data.end || '-'}</div>
+                </div>
+            `;
+        }
+    }
+    
+    body.innerHTML = html;
+    modal.style.display = 'flex';
+}
+
+function closeDetailsModal() {
+    document.getElementById('details-modal').style.display = 'none';
+}
+
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('details-modal');
+    if (event.target === modal) {
+        closeDetailsModal();
+    }
+});
+</script>
+{% endblock %}

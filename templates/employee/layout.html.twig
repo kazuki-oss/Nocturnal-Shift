@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="employee-wrapper">
+    <!-- Header -->
+    <header class="employee-header">
+        <div class="d-flex align-center">
+            <i class="mdi mdi-moon-waning-crescent" style="color: var(--secondary-color); margin-right: 8px;"></i>
+            <span style="font-weight: bold;">{{ tenant ? tenant.name : '従業員ポータル' }}</span>
+        </div>
+        <a href="{{ path('employee_logout') }}" class="text-muted">
+            <i class="mdi mdi-logout"></i>
+        </a>
+    </header>
+
+    <!-- Content -->
+    <div class="employee-content">
+        {% block employee_content %}{% endblock %}
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ path('employee_dashboard') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'employee_dashboard' %}active{% endif %}">
+            <i class="mdi mdi-home"></i>
+            <span>ホーム</span>
+        </a>
+        <a href="{{ path('employee_shift_request_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'employee_shift_request' %}active{% endif %}">
+            <i class="mdi mdi-calendar-edit"></i>
+            <span>シフト希望</span>
+        </a>
+        <a href="{{ path('employee_attendance_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'employee_attendance' %}active{% endif %}">
+            <i class="mdi mdi-clock-outline"></i>
+            <span>勤怠</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="mdi mdi-account"></i>
+            <span>プロフィール</span>
+        </a>
+    </nav>
+</div>
+{% endblock %}

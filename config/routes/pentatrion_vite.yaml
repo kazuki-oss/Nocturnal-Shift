@@ -1,0 +1,3 @@
+_pentatrion_vite:
+    resource: '/var/www/html/vendor/pentatrion/vite-bundle/src/Resources/config/routing.yaml'
+    prefix: /_vite

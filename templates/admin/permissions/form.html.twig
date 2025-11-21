@@ -1,0 +1,68 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ isEdit ? '権限編集' : '権限作成' }}{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">{{ isEdit ? '権限編集' : '権限作成' }}</h2>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    {{ form_start(form, {'attr': {'class': 'employee-form'}}) }}
+    
+    <div class="form-section">
+        <h3 class="form-section-title">基本情報</h3>
+        
+        <div class="form-row">
+            <div class="form-group">
+                {{ form_label(form.name) }}
+                {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.name) }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                {{ form_label(form.identifier) }}
+                {{ form_widget(form.identifier, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.identifier) }}
+                <small class="form-help">例: shift.create, employee.view</small>
+            </div>
+        </div>
+    </div>
+
+    {{ form_rest(form) }}
+
+    <div class="form-actions">
+        <a href="{{ path('admin_permissions_index') }}" class="btn btn-secondary">
+            <i class="mdi mdi-close"></i> キャンセル
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="mdi mdi-content-save"></i> 保存
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+</div>
+
+<style>
+.form-help {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+code {
+    background: rgba(124, 77, 255, 0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+</style>
+{% endblock %}

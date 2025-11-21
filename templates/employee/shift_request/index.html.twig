@@ -1,0 +1,150 @@
+{% extends 'employee/layout.html.twig' %}
+
+{% block title %}シフト希望提出{% endblock %}
+
+{% block employee_content %}
+<div class="page-header mb-4">
+    <h2 class="page-title">シフト希望提出</h2>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    <form method="post" action="{{ path('employee_shift_request_submit') }}" id="shift-request-form" class="p-4">
+        <div class="form-section mb-4">
+            <h3 class="form-section-title">対象月を選択</h3>
+            <div class="form-group">
+                <label>年月</label>
+                <input type="text" id="month-picker" name="target_month" class="form-control" placeholder="年月を選択" required>
+            </div>
+        </div>
+
+        <div id="days-container" class="form-section" style="display: none;">
+            <h3 class="form-section-title">日別希望</h3>
+            <p class="text-muted mb-3">各日の勤務可能時間を入力してください。</p>
+            <div id="days-list"></div>
+        </div>
+
+        <div class="form-actions" id="form-actions" style="display: none;">
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="mdi mdi-send"></i> 提出する
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.day-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.day-label {
+    min-width: 100px;
+    font-weight: 600;
+}
+
+.day-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.time-inputs {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.time-inputs input {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .day-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .time-inputs {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 月ピッカー初期化
+    flatpickr("#month-picker", {
+        locale: "ja",
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: true,
+                dateFormat: "Y-m",
+                altFormat: "Y年m月"
+            })
+        ],
+        onChange: function(selectedDates, dateStr) {
+            loadMonthDays(dateStr);
+        }
+    });
+});
+
+function loadMonthDays(month) {
+    const [year, monthNum] = month.split('-');
+    const daysInMonth = new Date(year, monthNum, 0).getDate();
+    const container = document.getElementById('days-list');
+    container.innerHTML = '';
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = `${year}-${monthNum.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        const dayName = new Date(date).toLocaleDateString('ja-JP', { weekday: 'short' });
+        
+        const dayRow = document.createElement('div');
+        dayRow.className = 'day-row';
+        dayRow.innerHTML = `
+            <div class="day-label">${day}日 (${dayName})</div>
+            <div class="day-checkbox">
+                <input type="checkbox" id="available_${day}" name="days[${date}][available]" value="1" onchange="toggleTimeInputs(${day})">
+                <label for="available_${day}">勤務可能</label>
+            </div>
+            <div class="time-inputs" id="time_${day}" style="display: none;">
+                <input type="text" name="days[${date}][start]" class="form-control time-picker" placeholder="開始時刻" data-day="${day}">
+                <input type="text" name="days[${date}][end]" class="form-control time-picker" placeholder="終了時刻" data-day="${day}">
+            </div>
+        `;
+        container.appendChild(dayRow);
+    }
+
+    // 時刻ピッカー初期化
+    flatpickr(".time-picker", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        locale: "ja"
+    });
+
+    document.getElementById('days-container').style.display = 'block';
+    document.getElementById('form-actions').style.display = 'block';
+}
+
+function toggleTimeInputs(day) {
+    const checkbox = document.getElementById(`available_${day}`);
+    const timeInputs = document.getElementById(`time_${day}`);
+    timeInputs.style.display = checkbox.checked ? 'flex' : 'none';
+}
+</script>
+
+<!-- monthSelectPlugin CDN -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+{% endblock %}

@@ -1,0 +1,13 @@
+pentatrion_vite:
+    # public_directory: public
+    # build_directory: build
+    proxy_origin: http://localhost:5175
+    # throw_error_on_missing_entry: false
+    # throw_error_on_missing_asset: false
+    # cross_origin: 'anonymous'
+    # script_attributes:
+    #    defer: true
+    # link_attributes:
+    #    referrerpolicy: 'origin'
+    # preload_attributes:
+    #    crossorigin: 'anonymous'

@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="admin-wrapper">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <i class="mdi mdi-moon-waning-crescent" style="margin-right: 10px;"></i>
+            Nocturnal
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ path('admin_dashboard') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_dashboard' %}active{% endif %}">
+                <i class="mdi mdi-view-dashboard"></i>
+                <span>ダッシュボード</span>
+            </a>
+            <a href="{{ path('admin_schedule_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_schedule' %}active{% endif %}">
+                <i class="mdi mdi-calendar-month"></i>
+                <span>スケジュール</span>
+            </a>
+            <a href="{{ path('admin_attendance_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_attendance' %}active{% endif %}">
+                <i class="mdi mdi-clock-check"></i>
+                <span>勤怠</span>
+            </a>
+            <a href="{{ path('admin_employees_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_employees' %}active{% endif %}">
+                <i class="mdi mdi-account-group"></i>
+                <span>従業員</span>
+            </a>
+            <a href="{{ path('admin_roles_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_roles' %}active{% endif %}">
+                <i class="mdi mdi-shield-account"></i>
+                <span>ロール</span>
+            </a>
+            <a href="{{ path('admin_permissions_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_permissions' %}active{% endif %}">
+                <i class="mdi mdi-key"></i>
+                <span>権限</span>
+            </a>
+            <a href="{{ path('admin_settings_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_settings' %}active{% endif %}">
+                <i class="mdi mdi-cog"></i>
+                <span>設定</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <header class="admin-header">
+            <div class="tenant-name">
+                {{ tenant ? tenant.name : 'Admin Portal' }}
+            </div>
+            <div class="user-profile">
+                <span class="text-muted">{{ app.user.name|default('Admin') }}</span>
+                <div class="avatar">
+                    {{ app.user.name|default('A')|slice(0, 1)|upper }}
+                </div>
+                <a href="{{ path('admin_logout') }}" class="btn btn-sm text-muted" title="Logout">
+                    <i class="mdi mdi-logout"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </main>
+</div>
+{% endblock %}

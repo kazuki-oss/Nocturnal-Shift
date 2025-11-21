@@ -1,0 +1,159 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ employee.name }}の勤怠履歴{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">{{ employee.name }}の勤怠履歴</h2>
+    <a href="{{ path('admin_attendance_index') }}" class="btn btn-secondary">
+        <i class="mdi mdi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<!-- サマリーカード -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <div class="summary-icon">
+            <i class="mdi mdi-calendar-check"></i>
+        </div>
+        <div class="summary-content">
+            <div class="summary-label">出勤日数</div>
+            <div class="summary-value">{{ totalDays }}日</div>
+        </div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon">
+            <i class="mdi mdi-clock-outline"></i>
+        </div>
+        <div class="summary-content">
+            <div class="summary-label">累計勤務時間</div>
+            <div class="summary-value">{{ totalWorkingHours }}時間</div>
+        </div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon">
+            <i class="mdi mdi-chart-line"></i>
+        </div>
+        <div class="summary-content">
+            <div class="summary-label">平均勤務時間</div>
+            <div class="summary-value">{{ avgWorkingHours }}時間/日</div>
+        </div>
+    </div>
+</div>
+
+<!-- 勤怠履歴テーブル -->
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>日付</th>
+                <th>曜日</th>
+                <th>出勤</th>
+                <th>退勤</th>
+                <th>休憩</th>
+                <th>勤務時間</th>
+                <th>ステータス</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if attendances is empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">勤怠履歴がありません。</td>
+                </tr>
+            {% else %}
+                {% for attendance in attendances %}
+                    <tr>
+                        <td>{{ attendance.attendanceDate|date('Y/m/d') }}</td>
+                        <td>{{ attendance.attendanceDate|date('D')|trans }}</td>
+                        <td>{{ attendance.clockInAt ? attendance.clockInAt|date('H:i') : '-' }}</td>
+                        <td>{{ attendance.clockOutAt ? attendance.clockOutAt|date('H:i') : '-' }}</td>
+                        <td>{{ attendance.breakMinutes ?? 0 }}分</td>
+                        <td>
+                            {% if attendance.clockInAt and attendance.clockOutAt %}
+                                {% set workingMinutes = ((attendance.clockOutAt.timestamp - attendance.clockInAt.timestamp) / 60)|round(0, 'floor') - (attendance.breakMinutes ?? 0) %}
+                                {% set hours = (workingMinutes / 60)|round(0, 'floor') %}
+                                {% set minutes = workingMinutes % 60 %}
+                                <strong>{{ hours }}時間{{ minutes }}分</strong>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge {% if attendance.clockOutAt %}status-finished{% else %}status-working{% endif %}">
+                                {% if attendance.clockOutAt %}退勤済み{% else %}勤務中{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-icon i {
+    font-size: 2rem;
+    color: #3b82f6;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-working {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+}
+
+.status-finished {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}勤怠管理{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">勤怠管理</h2>
+    <div class="header-actions">
+        <form method="get" class="date-form">
+            <input type="date" name="date" value="{{ date|date('Y-m-d') }}" class="form-control" onchange="this.form.submit()">
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>従業員名</th>
+                <th>ステータス</th>
+                <th>出勤</th>
+                <th>退勤</th>
+                <th>休憩</th>
+                <th>勤務時間</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in attendanceData %}
+                <tr>
+                    <td>{{ data.employee.name }}</td>
+                    <td>
+                        <span class="status-badge status-{{ data.status }}">
+                            {% if data.status == 'absent' %}欠勤
+                            {% elseif data.status == 'working' %}勤務中
+                            {% elseif data.status == 'finished' %}退勤済み
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ data.attendance ? (data.attendance.clockInAt ? data.attendance.clockInAt|date('H:i') : '-') : '-' }}</td>
+                    <td>{{ data.attendance ? (data.attendance.clockOutAt ? data.attendance.clockOutAt|date('H:i') : '-') : '-' }}</td>
+                    <td>{{ data.attendance ? (data.attendance.breakMinutes ?? 0) : 0 }}分</td>
+                    <td>
+                        {% if data.workingMinutes > 0 %}
+                            {% set hours = (data.workingMinutes / 60)|round(0, 'floor') %}
+                            {% set minutes = data.workingMinutes % 60 %}
+                            {{ hours }}時間{{ minutes }}分
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        <a href="{{ path('admin_attendance_employee', {id: data.employee.id}) }}" class="btn btn-sm btn-info" title="履歴">
+                            <i class="mdi mdi-history"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.date-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.date-form .form-control {
+    min-width: 200px;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-absent {
+    background: rgba(156, 163, 175, 0.2);
+    color: #9ca3af;
+}
+
+.status-working {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+}
+
+.status-finished {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-info {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #2563eb;
+}
+</style>
+{% endblock %}

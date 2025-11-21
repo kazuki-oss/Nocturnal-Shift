@@ -1,0 +1,64 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}ロール管理{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">ロール管理</h2>
+    <a href="{{ path('admin_roles_new') }}" class="btn btn-primary">
+        <i class="mdi mdi-plus"></i> 新規作成
+    </a>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="search-form">
+            <input type="text" name="search" value="{{ search }}" placeholder="ロール名または識別子で検索" class="form-control search-input">
+            <button type="submit" class="btn btn-secondary">
+                <i class="mdi mdi-magnify"></i> 検索
+            </button>
+        </form>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ロール名</th>
+                <th>識別子</th>
+                <th>権限数</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <td>{{ role.name }}</td>
+                <td><code>{{ role.identifier }}</code></td>
+                <td>{{ role.permissions|length }}</td>
+                <td class="actions">
+                    <a href="{{ path('admin_roles_permissions', {id: role.id}) }}" class="btn-icon" title="権限設定">
+                        <i class="mdi mdi-shield-account"></i>
+                    </a>
+                    <a href="{{ path('admin_roles_edit', {id: role.id}) }}" class="btn-icon" title="編集">
+                        <i class="mdi mdi-pencil"></i>
+                    </a>
+                    <form method="post" action="{{ path('admin_roles_delete', {id: role.id}) }}" style="display: inline;" onsubmit="return confirm('本当に削除しますか？');">
+                        <button type="submit" class="btn-icon btn-danger" title="削除">
+                            <i class="mdi mdi-delete"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center text-muted">ロールが見つかりませんでした。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

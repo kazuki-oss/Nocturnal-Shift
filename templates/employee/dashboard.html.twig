@@ -1,0 +1,61 @@
+{% extends 'employee/layout.html.twig' %}
+
+{% block title %}マイダッシュボード{% endblock %}
+
+{% block employee_content %}
+<div class="mb-4">
+    <h2 class="card-title" style="font-size: 1.5rem;">お疲れ様です、{{ app.user.name }}さん</h2>
+    <p class="text-muted">現在の状況</p>
+</div>
+
+<!-- Next Shift Card -->
+<div class="card" style="background: linear-gradient(135deg, var(--card-bg), rgba(24, 255, 255, 0.05)); border: 1px solid rgba(24, 255, 255, 0.2);">
+    <div class="d-flex justify-between align-center mb-4">
+        <span class="stat-label" style="color: var(--secondary-color);">次回のシフト</span>
+        <i class="mdi mdi-calendar-arrow-right" style="color: var(--secondary-color); font-size: 1.5rem;"></i>
+    </div>
+    <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem;">
+        {{ next_shift.date }}
+    </div>
+    <div class="d-flex align-center text-muted">
+        <i class="mdi mdi-clock-outline" style="margin-right: 5px;"></i>
+        {{ next_shift.time }}
+    </div>
+    <div class="mt-2">
+        <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+            {{ next_shift.role }}
+        </span>
+    </div>
+</div>
+
+<!-- Monthly Stats -->
+<div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div class="card">
+        <div class="stat-label mb-2">今月の労働時間</div>
+        <div class="stat-value" style="font-size: 1.5rem;">{{ hours_this_month }}h</div>
+        <div style="height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px;">
+            <div style="width: 70%; height: 100%; background: var(--secondary-color); border-radius: 2px;"></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="stat-label mb-2">概算給与</div>
+        <div class="stat-value" style="font-size: 1.5rem;">¥{{ estimated_earnings|number_format }}</div>
+        <div class="text-muted" style="font-size: 0.7rem; margin-top: 5px;">税引前</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-4">
+    <h3 class="card-title">クイックアクション</h3>
+    <div class="d-flex" style="gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+        <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); min-width: 100px; display: flex; flex-direction: column; align-items: center; padding: 1rem;">
+            <i class="mdi mdi-calendar-plus" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);"></i>
+            <span style="font-size: 0.8rem;">休暇申請</span>
+        </button>
+        <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); min-width: 100px; display: flex; flex-direction: column; align-items: center; padding: 1rem;">
+            <i class="mdi mdi-history" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);"></i>
+            <span style="font-size: 0.8rem;">履歴</span>
+        </button>
+    </div>
+</div>
+{% endblock %}

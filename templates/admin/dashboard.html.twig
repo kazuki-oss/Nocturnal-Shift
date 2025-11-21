@@ -1,0 +1,69 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}ダッシュボード{% endblock %}
+
+{% block admin_content %}
+<div class="dashboard-header mb-4">
+    <h2 class="card-title" style="font-size: 1.5rem;">ダッシュボード</h2>
+    <p class="text-muted">お疲れ様です、{{ app.user.name }}さん</p>
+</div>
+
+<div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+    <!-- Employees Card -->
+    <div class="card">
+        <div class="d-flex justify-between align-center mb-4">
+            <span class="stat-label">総従業員数</span>
+            <i class="mdi mdi-account-group text-muted" style="font-size: 1.5rem;"></i>
+        </div>
+        <div class="stat-value">{{ stats.employees }}</div>
+        <div class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">
+            <span style="color: #4ade80;">+2</span> 今月
+        </div>
+    </div>
+
+    <!-- Shifts Today Card -->
+    <div class="card">
+        <div class="d-flex justify-between align-center mb-4">
+            <span class="stat-label">本日のシフト</span>
+            <i class="mdi mdi-clock-outline text-muted" style="font-size: 1.5rem;"></i>
+        </div>
+        <div class="stat-value">{{ stats.shifts_today }}</div>
+        <div class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">
+            次のシフト開始まで 2時間
+        </div>
+    </div>
+
+    <!-- Pending Requests Card -->
+    <div class="card">
+        <div class="d-flex justify-between align-center mb-4">
+            <span class="stat-label">承認待ちリクエスト</span>
+            <i class="mdi mdi-bell-outline text-muted" style="font-size: 1.5rem;"></i>
+        </div>
+        <div class="stat-value">{{ stats.pending_requests }}</div>
+        <div class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">
+            対応が必要です
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Section (Placeholder) -->
+<div class="card mt-4" style="margin-top: 2rem;">
+    <h3 class="card-title">最近のアクティビティ</h3>
+    <ul class="activity-list">
+        <li class="d-flex align-center p-2" style="border-bottom: 1px solid var(--border-color);">
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem; margin-right: 1rem;">JD</div>
+            <div>
+                <div><strong>John Doe</strong> がシフト希望を提出しました</div>
+                <div class="text-muted" style="font-size: 0.8rem;">2時間前</div>
+            </div>
+        </li>
+        <li class="d-flex align-center p-2">
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem; margin-right: 1rem; background-color: var(--secondary-color); color: #000;">AS</div>
+            <div>
+                <div><strong>Alice Smith</strong> が出勤しました</div>
+                <div class="text-muted" style="font-size: 0.8rem;">4時間前</div>
+            </div>
+        </li>
+    </ul>
+</div>
+{% endblock %}

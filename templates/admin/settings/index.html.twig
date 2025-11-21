@@ -1,0 +1,196 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}設定{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">設定</h2>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="card">
+    <div class="settings-tabs">
+        <button class="tab-btn {% if activeTab == 'tenant' %}active{% endif %}" onclick="switchTab('tenant')">
+            <i class="mdi mdi-store"></i>
+            テナント設定
+        </button>
+        <button class="tab-btn {% if activeTab == 'system' %}active{% endif %}" onclick="switchTab('system')">
+            <i class="mdi mdi-cog"></i>
+            システム設定
+        </button>
+        <button class="tab-btn {% if activeTab == 'account' %}active{% endif %}" onclick="switchTab('account')">
+            <i class="mdi mdi-account"></i>
+            アカウント設定
+        </button>
+    </div>
+
+    <div class="tab-content">
+        {# テナント設定 #}
+        <div class="tab-pane {% if activeTab == 'tenant' %}active{% endif %}" id="tenant-tab">
+            <form method="post" action="{{ path('admin_settings_tenant') }}" class="settings-form">
+                <div class="form-section">
+                    <h3 class="form-section-title">店舗情報</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>店舗名</label>
+                            <input type="text" name="tenant_name" value="{{ tenant.name }}" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ドメイン</label>
+                            <input type="text" value="{{ tenant.domain }}" class="form-control" disabled>
+                            <small class="form-help">ドメインは変更できません。</small>
+                        </div>
+                    </div>
+
+                    {# 将来的に追加: 住所、電話番号、営業時間 #}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="mdi mdi-content-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# システム設定 #}
+        <div class="tab-pane {% if activeTab == 'system' %}active{% endif %}" id="system-tab">
+            <form method="post" action="{{ path('admin_settings_system') }}" class="settings-form">
+                <div class="form-section">
+                    <h3 class="form-section-title">システム設定</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>タイムゾーン</label>
+                            <select name="timezone" class="form-control">
+                                <option value="Asia/Tokyo" selected>Asia/Tokyo (日本標準時)</option>
+                                <option value="UTC">UTC</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>言語</label>
+                            <select name="language" class="form-control">
+                                <option value="ja" selected>日本語</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="mdi mdi-content-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# アカウント設定 #}
+        <div class="tab-pane {% if activeTab == 'account' %}active{% endif %}" id="account-tab">
+            <form method="post" action="{{ path('admin_settings_account') }}" class="settings-form">
+                <div class="form-section">
+                    <h3 class="form-section-title">プロフィール</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>氏名</label>
+                            <input type="text" name="name" value="{{ user.name }}" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>メールアドレス</label>
+                            <input type="email" value="{{ user.email }}" class="form-control" disabled>
+                            <small class="form-help">メールアドレスは変更できません。</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="form-section-title">パスワード変更</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>新しいパスワード</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="変更する場合のみ入力">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="mdi mdi-content-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(tabName) {
+    window.location.href = '{{ path('admin_settings_index') }}?tab=' + tabName;
+}
+</script>
+
+<style>
+.settings-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    padding: 2rem;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.settings-form .form-section {
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
