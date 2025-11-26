@@ -5,8 +5,13 @@
     <!-- Sidebar -->
     <aside class="admin-sidebar">
         <div class="sidebar-header">
-            <i class="mdi mdi-moon-waning-crescent" style="margin-right: 10px;"></i>
-            Nocturnal
+            <button id="sidebar-toggle" class="btn btn-icon text-muted">
+                <i class="mdi mdi-menu"></i>
+            </button>
+            <div class="sidebar-brand">
+                <i class="mdi mdi-moon-waning-crescent"></i>
+                <span class="brand-text">Nocturnal</span>
+            </div>
         </div>
         <nav class="sidebar-nav">
             <a href="{{ path('admin_dashboard') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_dashboard' %}active{% endif %}">
@@ -74,4 +79,22 @@
         </div>
     </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const wrapper = document.querySelector('.admin-wrapper');
+    
+    // Restore state from localStorage
+    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+    if (isCollapsed) {
+        wrapper.classList.add('collapsed');
+    }
+
+    toggleBtn.addEventListener('click', function() {
+        wrapper.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', wrapper.classList.contains('collapsed'));
+    });
+});
+</script>
 {% endblock %}

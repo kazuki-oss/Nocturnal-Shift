@@ -105,4 +105,17 @@ class AttendanceRepository extends ServiceEntityRepository
             'avgMinutes' => $totalDays > 0 ? floor($totalMinutes / $totalDays) : 0,
         ];
     }
+
+    public function findRecentByTenant(\App\Entity\Tenant $tenant, int $limit = 5): array
+    {
+        return $this->createQueryBuilder('a')
+            ->join('a.user', 'u')
+            ->where('u.tenant = :tenant')
+            ->andWhere('a.clockInAt IS NOT NULL')
+            ->setParameter('tenant', $tenant)
+            ->orderBy('a.clockInAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

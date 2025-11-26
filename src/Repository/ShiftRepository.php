@@ -39,4 +39,22 @@ class ShiftRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function countByDate(\App\Entity\Tenant $tenant, \DateTimeInterface $date): int
+    {
+        $start = (clone $date)->setTime(0, 0, 0);
+        $end = (clone $date)->setTime(23, 59, 59);
+
+        return $this->createQueryBuilder('s')
+            ->select('count(s.id)')
+            ->join('s.user', 'u')
+            ->where('u.tenant = :tenant')
+            ->andWhere('s.startTime >= :start')
+            ->andWhere('s.startTime <= :end')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

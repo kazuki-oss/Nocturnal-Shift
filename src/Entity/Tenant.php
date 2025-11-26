@@ -115,12 +115,29 @@ class Tenant
         return $this;
     }
 
+    /**
+     * カレンダー開始曜日（0=日曜, 1=月曜）
+     */
+    #[ORM\Column(type: Types::INTEGER, options: ['default' => 1])]
+    private int $calendarStartDay = 1;
+
+    public function getCalendarStartDay(): int
+    {
+        return $this->calendarStartDay;
+    }
+
+    public function setCalendarStartDay(int $calendarStartDay): self
+    {
+        $this->calendarStartDay = $calendarStartDay;
+        return $this;
+    }
+
     public function getBusinessDays(): ?array
     {
         return $this->businessDays;
     }
 
-    public function setBusinessDays(?array $businessDays): static
+    public function setBusinessDays(?array $businessDays): self
     {
         $this->businessDays = $businessDays;
         return $this;

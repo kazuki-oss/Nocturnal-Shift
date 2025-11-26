@@ -49,6 +49,14 @@
     padding: 2px 4px;
     font-size: 0.875rem;
 }
+
+/* 土日の背景色 */
+.fc-day-sat {
+    background-color: #eff6ff; /* 薄い青 */
+}
+.fc-day-sun {
+    background-color: #fef2f2; /* 薄い赤 */
+}
 </style>
 
 <script>
@@ -78,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'ja',
+        firstDay: {{ tenant.calendarStartDay }}, // 設定された開始曜日
         nextDayThreshold: nextDayThreshold, // 営業日ベースの日付判定
         {% if businessHours|length > 0 %}
         // 営業時間に基づいて時間軸を設定（開始6時間前から表示）

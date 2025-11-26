@@ -60,6 +60,12 @@ class SettingsController extends AbstractController
         $businessDays = $request->request->all('business_days');
         $tenant->setBusinessDays($businessDays ? array_map('intval', $businessDays) : null);
 
+        // カレンダー開始曜日
+        $calendarStartDay = $request->request->get('calendar_start_day');
+        if ($calendarStartDay !== null) {
+            $tenant->setCalendarStartDay((int)$calendarStartDay);
+        }
+
         $this->entityManager->flush();
 
         $this->addFlash('success', 'テナント設定を更新しました。');
