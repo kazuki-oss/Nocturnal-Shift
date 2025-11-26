@@ -50,20 +50,24 @@
 <div class="card mt-4" style="margin-top: 2rem;">
     <h3 class="card-title">最近のアクティビティ</h3>
     <ul class="activity-list">
-        <li class="d-flex align-center p-2" style="border-bottom: 1px solid var(--border-color);">
-            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem; margin-right: 1rem;">JD</div>
-            <div>
-                <div><strong>John Doe</strong> がシフト希望を提出しました</div>
-                <div class="text-muted" style="font-size: 0.8rem;">2時間前</div>
-            </div>
-        </li>
-        <li class="d-flex align-center p-2">
-            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem; margin-right: 1rem; background-color: var(--secondary-color); color: #000;">AS</div>
-            <div>
-                <div><strong>Alice Smith</strong> が出勤しました</div>
-                <div class="text-muted" style="font-size: 0.8rem;">4時間前</div>
-            </div>
-        </li>
+        {% for activity in activities %}
+            <li class="d-flex align-center p-2" {% if not loop.last %}style="border-bottom: 1px solid var(--border-color);"{% endif %}>
+                <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem; margin-right: 1rem; {% if activity.type == 'attendance' %}background-color: var(--secondary-color); color: #000;{% endif %}">
+                    {{ activity.initials }}
+                </div>
+                <div>
+                    <div><strong>{{ activity.user.name }}</strong> {{ activity.message|replace({(activity.user.name): ''}) }}</div>
+                    <div class="text-muted" style="font-size: 0.8rem;">
+                        {{ activity.time|date('Y/m/d H:i') }}
+                        <span class="ms-2">({{ activity.time|ago }})</span>
+                    </div>
+                </div>
+            </li>
+        {% else %}
+            <li class="p-3 text-center text-muted">
+                最近のアクティビティはありません
+            </li>
+        {% endfor %}
     </ul>
 </div>
 {% endblock %}

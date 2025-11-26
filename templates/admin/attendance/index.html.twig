@@ -4,112 +4,184 @@
 
 {% block admin_content %}
 <div class="page-header">
-    <h2 class="page-title">勤怠管理</h2>
+    <h2 class="page-title">勤怠管理 - {{ selectedDate|date('Y年m月d日') }}</h2>
     <div class="header-actions">
-        <form method="get" class="date-form">
-            <input type="date" name="date" value="{{ date|date('Y-m-d') }}" class="form-control" onchange="this.form.submit()">
+        <a href="{{ path('admin_attendance_monthly_report') }}" class="btn btn-secondary">
+            <i class="mdi mdi-chart-line"></i> 月次レポート
+        </a>
+    </div>
+</div>
+
+{# 未打刻アラート #}
+{% set missingClockOut = attendances|filter(a => a.clockInAt and not a.clockOutAt) %}
+{% if missingClockOut|length > 0 %}
+<div class="alert alert-warning">
+    <div class="alert-icon">
+        <i class="mdi mdi-alert"></i>
+    </div>
+    <div class="alert-content">
+        <strong>未打刻があります！</strong>
+        <p>{{ missingClockOut|length }}名が退勤打刻を行っていません。</p>
+        <div class="missing-users">
+            {% for attendance in missingClockOut %}
+                <span class="badge badge-warn">{{ attendance.user.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# フィルター #}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="filter-form">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>日付</label>
+                    <input type="date" name="date" class="form-control" value="{{ selectedDate }}" onchange="this.form.submit()">
+                </div>
+                <div class="col-md-3">
+                    <label>従業員</label>
+                    <select name="user" class="form-control" onchange="this.form.submit()">
+                        <option value="">全員</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}" {{ selectedUser == user.id ? 'selected' : '' }}>{{ user.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>状態</label>
+                    <select name="status" class="form-control" onchange="this.form.submit()">
+                        <option value="">全て</option>
+                        <option value="complete" {{ selectedStatus == 'complete' ? 'selected' : '' }}>打刻完了</option>
+                        <option value="incomplete" {{ selectedStatus == 'incomplete' ? 'selected' : '' }}>打刻中</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <a href="{{ path('admin_attendance_index') }}" class="btn btn-outline-secondary">リセット</a>
+                </div>
+            </div>
         </form>
     </div>
 </div>
 
+{# 勤怠一覧 #}
 <div class="card">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>従業員名</th>
-                <th>ステータス</th>
-                <th>出勤</th>
-                <th>退勤</th>
-                <th>休憩</th>
-                <th>勤務時間</th>
-                <th>アクション</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for data in attendanceData %}
-                <tr>
-                    <td>{{ data.employee.name }}</td>
-                    <td>
-                        <span class="status-badge status-{{ data.status }}">
-                            {% if data.status == 'absent' %}欠勤
-                            {% elseif data.status == 'working' %}勤務中
-                            {% elseif data.status == 'finished' %}退勤済み
-                            {% endif %}
-                        </span>
-                    </td>
-                    <td>{{ data.attendance ? (data.attendance.clockInAt ? data.attendance.clockInAt|date('H:i') : '-') : '-' }}</td>
-                    <td>{{ data.attendance ? (data.attendance.clockOutAt ? data.attendance.clockOutAt|date('H:i') : '-') : '-' }}</td>
-                    <td>{{ data.attendance ? (data.attendance.breakMinutes ?? 0) : 0 }}分</td>
-                    <td>
-                        {% if data.workingMinutes > 0 %}
-                            {% set hours = (data.workingMinutes / 60)|round(0, 'floor') %}
-                            {% set minutes = data.workingMinutes % 60 %}
-                            {{ hours }}時間{{ minutes }}分
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td class="actions">
-                        <a href="{{ path('admin_attendance_employee', {id: data.employee.id}) }}" class="btn btn-sm btn-info" title="履歴">
-                            <i class="mdi mdi-history"></i>
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>従業員名</th>
+                        <th>出勤</th>
+                        <th>退勤</th>
+                        <th>休憩(分)</th>
+                        <th>労働時間</th>
+                        <th>状態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attendance in attendances %}
+                        {% set workHours = attendance.clockInAt and attendance.clockOutAt 
+                            ? ((attendance.clockOutAt.timestamp - attendance.clockInAt.timestamp) / 3600 - (attendance.breakMinutes / 60))|round(2)
+                            : 0 
+                        %}
+                        <tr>
+                            <td>{{ attendance.user.name }}</td>
+                            <td>
+                                {% if attendance.clockInAt %}
+                                    {{ attendance.clockInAt|date('H:i') }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attendance.clockOutAt %}
+                                    {{ attendance.clockOutAt|date('H:i') }}
+                                {% else %}
+                                    <span class="badge badge-warning">打刻中</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ attendance.breakMinutes ?? 0 }}</td>
+                            <td>
+                                {% if workHours > 0 %}
+                                    <strong>{{ workHours }} h</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attendance.clockOutAt %}
+                                    <span class="badge badge-success">完了</span>
+                                {% elseif attendance.clockInAt %}
+                                    <span class="badge badge-info">勤務中</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">未打刻</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ path('admin_attendance_edit', {id: attendance.id}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="mdi mdi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">該当する勤怠データがありません</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <style>
-.header-actions {
+.filter-form .row { align-items: flex-end; }
+.badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85em; }
+.badge-success { background-color: #10b981; color: white; }
+.badge-warning { background-color: #f59e0b; color: white; }
+.badge-info { background-color: #3b82f6; color: white; }
+.badge-secondary { background-color: #6c757d; color: white; }
+.text-muted { color: #9ca3af; }
+
+/* Alert styling */
+.alert {
     display: flex;
     gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
 }
-
-.date-form {
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid #f59e0b;
+    color: #f59e0b;
+}
+.alert-icon {
+    font-size: 1.5rem;
+}
+.alert-content strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.alert-content p {
+    margin: 0.5rem 0;
+    color: var(--text-color);
+}
+.missing-users {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
+    margin-top: 0.75rem;
 }
-
-.date-form .form-control {
-    min-width: 200px;
-}
-
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.status-absent {
-    background: rgba(156, 163, 175, 0.2);
-    color: #9ca3af;
-}
-
-.status-working {
-    background: rgba(74, 222, 128, 0.2);
-    color: #4ade80;
-}
-
-.status-finished {
-    background: rgba(96, 165, 250, 0.2);
-    color: #60a5fa;
-}
-
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-
-.btn-info {
-    background: #3b82f6;
+.badge-warn {
+    background-color: #f59e0b;
     color: white;
-}
-
-.btn-info:hover {
-    background: #2563eb;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
 }
 </style>
 {% endblock %}

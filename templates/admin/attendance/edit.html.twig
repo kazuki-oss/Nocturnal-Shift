@@ -1,0 +1,157 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}勤怠データ修正{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">勤怠データ修正</h2>
+    <div class="header-actions">
+        <a href="{{ path('admin_attendance_employee', {id: attendance.user.id}) }}" class="btn btn-secondary">
+            <i class="mdi mdi-arrow-left"></i> 戻る
+        </a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h3>従業員情報</h3>
+        <p><strong>氏名:</strong> {{ attendance.user.name }}</p>
+        <p><strong>日付:</strong> {{ attendance.attendanceDate|date('Y年m月d日') }}</p>
+        
+        {% if attendance.lastModifiedAt %}
+        <div class="alert alert-info">
+            <i class="mdi mdi-information"></i>
+            最終修正: {{ attendance.lastModifiedAt|date('Y-m-d H:i') }} 
+            by {{ attendance.lastModifiedBy ? attendance.lastModifiedBy.name : '不明' }}
+            <br>
+            理由: {{ attendance.modificationReason }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form) }}
+            <div class="form-group mb-3">
+                {{ form_label(form.clockInAt) }}
+                {{ form_widget(form.clockInAt) }}
+                {{ form_errors(form.clockInAt) }}
+                <small class="form-text">現在: {{ attendance.clockInAt ? attendance.clockInAt|date('Y-m-d H:i') : '未打刻' }}</small>
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.clockOutAt) }}
+                {{ form_widget(form.clockOutAt) }}
+                {{ form_errors(form.clockOutAt) }}
+                <small class="form-text">現在: {{ attendance.clockOutAt ? attendance.clockOutAt|date('Y-m-d H:i') : '未打刻' }}</small>
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.breakMinutes) }}
+                {{ form_widget(form.breakMinutes) }}
+                {{ form_errors(form.breakMinutes) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.notes) }}
+                {{ form_widget(form.notes) }}
+                {{ form_errors(form.notes) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.modificationReason) }}
+                {{ form_widget(form.modificationReason) }}
+                {{ form_errors(form.modificationReason) }}
+                <small class="form-text text-danger">※修正理由は必須です（監査用）</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="mdi mdi-content-save"></i> 修正を保存
+                </button>
+                <a href="{{ path('admin_attendance_employee', {id: attendance.user.id}) }}" class="btn btn-secondary">
+                    キャンセル
+                </a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+<style>
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.text-danger {
+    color: #ef4444;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-info {
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    color: #1e40af;
+}
+</style>
+{% endblock %}

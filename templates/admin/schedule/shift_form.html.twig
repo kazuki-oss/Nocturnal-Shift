@@ -1,0 +1,131 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ shift ? 'シフト編集' : 'シフト作成' }}{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">{{ shift ? 'シフト編集' : 'シフト作成' }}</h2>
+    <div class="header-actions">
+        <a href="{{ path('admin_schedule_index') }}" class="btn btn-secondary">
+            <i class="mdi mdi-arrow-left"></i> 戻る
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form) }}
+            <div class="form-group mb-3">
+                {{ form_label(form.user) }}
+                {{ form_widget(form.user) }}
+                {{ form_errors(form.user) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.startTime) }}
+                {{ form_widget(form.startTime) }}
+                {{ form_errors(form.startTime) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.endTime) }}
+                {{ form_widget(form.endTime) }}
+                {{ form_errors(form.endTime) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.status) }}
+                {{ form_widget(form.status) }}
+                {{ form_errors(form.status) }}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="mdi mdi-content-save"></i> {{ shift ? '更新' : '作成' }}
+                </button>
+                {% if shift %}
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="mdi mdi-delete"></i> 削除
+                    </button>
+                {% endif %}
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+{% if shift %}
+<form id="delete-form" method="post" action="{{ path('admin_shift_delete', {id: shift.id}) }}" style="display: none;">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ shift.id) }}">
+</form>
+
+<script>
+function confirmDelete() {
+    if (confirm('このシフトを削除してもよろしいですか？')) {
+        document.getElementById('delete-form').submit();
+    }
+}
+</script>
+{% endif %}
+
+<style>
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+</style>
+{% endblock %}

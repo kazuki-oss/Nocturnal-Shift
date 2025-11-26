@@ -1,0 +1,125 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}月次勤怠レポート{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">月次勤怠レポート - {{ monthDate|date('Y年m月') }}</h2>
+    <div class="header-actions">
+        <form method="get" action="{{ path('admin_attendance_monthly', {year: year, month: month}) }}" class="month-selector">
+            <select name="year" onchange="this.form.submit()">
+                {% for y in (year-1)..(year+1) %}
+                    <option value="{{ y }}" {{ y == year ? 'selected' : '' }}>{{ y }}年</option>
+                {% endfor %}
+            </select>
+            <select name="month" onchange="this.form.submit()">
+                {% for m in 1..12 %}
+                    <option value="{{ m }}" {{ m == month ? 'selected' : '' }}>{{ m }}月</option>
+                {% endfor %}
+            </select>
+        </form>
+        <a href="{{ path('admin_attendance_index') }}" class="btn btn-secondary">
+            <i class="mdi mdi-arrow-left"></i> 戻る
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>従業員名</th>
+                <th>勤務日数</th>
+                <th>総勤務時間</th>
+                <th>平均勤務時間</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in stats %}
+                <tr>
+                    <td>{{ stat.user.name }}</td>
+                    <td>{{ stat.days }}日</td>
+                    <td>{{ (stat.totalMinutes / 60)|number_format(1) }}時間</td>
+                    <td>{{ stat.days > 0 ? ((stat.totalMinutes / stat.days) / 60)|number_format(1) : '0' }}時間</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">データがありません</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td><strong>合計</strong></td>
+                <td><strong>{{ stats|reduce((carry, stat) => carry + stat.days, 0) }}日</strong></td>
+                <td><strong>{{ (stats|reduce((carry, stat) => carry + stat.totalMinutes, 0) / 60)|number_format(1) }}時間</strong></td>
+                <td>-</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<style>
+.month-selector {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.month-selector select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table thead th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.total-row {
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+.total-row td {
+    border-top: 2px solid #d1d5db;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+</style>
+{% endblock %}

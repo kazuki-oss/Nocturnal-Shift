@@ -1,0 +1,223 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}ドリンク杯数ランキング{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">ドリンク杯数ランキング - {{ year }}年{{ month }}月</h2>
+    <div class="header-actions">
+        <form method="get" class="month-selector">
+            <select name="year" onchange="this.form.submit()">
+                {% for y in (year-1)..(year+1) %}
+                    <option value="{{ y }}" {{ y == year ? 'selected' : '' }}>{{ y }}年</option>
+                {% endfor %}
+            </select>
+            <select name="month" onchange="this.form.submit()">
+                {% for m in 1..12 %}
+                    <option value="{{ m }}" {{ m == month ? 'selected' : '' }}>{{ m }}月</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{# グラフ表示 #}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">上位10名の比較</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="rankingChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body">
+                <h3><i class="mdi mdi-trophy"></i> 今月のトップ</h3>
+                {% if ranking|length > 0 %}
+                    <div class="top-performer">
+                        <div class="performer-name">{{ ranking[0].userName }}</div>
+                        <div class="performer-count">{{ ranking[0].totalCount }} 杯</div>
+                    </div>
+                {% else %}
+                    <p>まだデータがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ランキング表 #}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">詳細ランキング</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th width="60">順位</th>
+                        <th>従業員名</th>
+                        <th class="text-right">杯数</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rank in ranking %}
+                        <tr>
+                            <td>
+                                {% if loop.index == 1 %}
+                                    <span class="rank-badge gold">1</span>
+                                {% elseif loop.index == 2 %}
+                                    <span class="rank-badge silver">2</span>
+                                {% elseif loop.index == 3 %}
+                                    <span class="rank-badge bronze">3</span>
+                                {% else %}
+                                    <span class="rank-number">{{ loop.index }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ rank.userName }}</td>
+                            <td class="text-right font-bold">{{ rank.totalCount}} 杯</td>
+                            <td>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: {{ (rank.totalCount / ranking[0].totalCount * 100)|round }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">データがありません</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.month-selector {
+    display: flex;
+    gap: 0.5rem;
+}
+.month-selector select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+.gold { background: #fbbf24; }
+.silver { background: #9ca3af; }
+.bronze { background: #b45309; }
+.rank-number {
+    display: inline-block;
+    width: 24px;
+    text-align: center;
+    color: #6b7280;
+}
+.text-right { text-align: right; }
+.font-bold { font-weight: bold; }
+.progress-bar-container {
+    width: 100px;
+    height: 6px;
+    background: #f3f4f6;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 3px;
+}
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+.top-performer {
+    margin-top: 1rem;
+    text-align: center;
+}
+.performer-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.performer-count {
+    font-size: 2rem;
+    font-weight: 800;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rankingData = {{ ranking|json_encode|raw }};
+    
+    if (rankingData.length > 0) {
+        const ctx = document.getElementById('rankingChart').getContext('2d');
+        const top10 = rankingData.slice(0, 10);
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: top10.map(r => r.userName),
+                datasets: [{
+                    label: '杯数',
+                    data: top10.map(r => r.totalCount),
+                    backgroundColor: top ranking.map((r, i) => {
+                        if (i === 0) return 'rgb(251, 191, 36)';  // gold
+                        if (i === 1) return 'rgb(156, 163, 175)'; // silver
+                        if (i === 2) return 'rgb(180, 83, 9)';    // bronze
+                        return 'rgb(59, 130, 246)';               // blue
+                    }),
+                    borderColor: top10.map((r, i) => {
+                        if (i === 0) return 'rgb(245, 158, 11)';
+                        if (i === 1) return 'rgb(107, 114, 128)';
+                        if (i === 2) return 'rgb(146, 64, 14)';
+                        return 'rgb(37, 99, 235)';
+                    }),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.x + ' 杯';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'employee/layout.html.twig' %}
+
+{% block title %}ドリンク記録履歴{% endblock %}
+
+{% block employee_content %}
+<div class="page-header">
+    <h2 class="page-title">ドリンク記録履歴 - {{ year }}年{{ month }}月</h2>
+    <div class="header-actions">
+        <form method="get" class="month-selector">
+            <select name="year" onchange="this.form.submit()">
+                {% for y in (year-1)..(year+1) %}
+                    <option value="{{ y }}" {{ y == year ? 'selected' : '' }}>{{ y }}年</option>
+                {% endfor %}
+            </select>
+            <select name="month" onchange="this.form.submit()">
+                {% for m in 1..12 %}
+                    <option value="{{ m }}" {{ m == month ? 'selected' : '' }}>{{ m }}月</option>
+                {% endfor %}
+            </select>
+        </form>
+        <a href="{{ path('employee_drink_record') }}" class="btn btn-primary">
+            <i class="mdi mdi-plus"></i> 記録する
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-gradient-success text-white">
+            <div class="card-body">
+                <div class="stat-display">
+                    <div class="stat-label">今月の合計</div>
+                    <div class="stat-value">{{ totalCount }} 杯</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>日付</th>
+                        <th class="text-right">杯数</th>
+                        <th>記録日時</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                        <tr>
+                            <td>{{ record.date|date('Y年m月d日 (D)') }}</td>
+                            <td class="text-right font-bold">{{ record.count }} 杯</td>
+                            <td class="text-muted">{{ record.createdAt|date('Y-m-d H:i') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center">記録がありません</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.month-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-right: 0.5rem;
+}
+.month-selector select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.bg-gradient-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+.stat-display {
+    text-align: center;
+}
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+}
+.stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+}
+.text-right { text-align: right; }
+.font-bold { font-weight: bold; }
+.text-muted { color: #6c757d; }
+</style>
+{% endblock %}

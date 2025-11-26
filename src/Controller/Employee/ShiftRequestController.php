@@ -38,18 +38,18 @@ class ShiftRequestController extends AbstractController
         // 既存のリクエストを検索
         $shiftRequest = $this->entityManager->getRepository(ShiftRequest::class)->findOneBy([
             'user' => $user,
-            'targetMonth' => new \DateTimeImmutable($targetMonth . '-01')
+            'month' => $targetMonth
         ]);
 
         if (!$shiftRequest) {
             $shiftRequest = new ShiftRequest();
             $shiftRequest->setUser($user);
-            $shiftRequest->setTargetMonth(new \DateTimeImmutable($targetMonth . '-01'));
+            $shiftRequest->setMonth($targetMonth);
             $shiftRequest->setSubmittedAt(new \DateTimeImmutable());
         }
 
         // JSON形式で保存
-        $shiftRequest->setRequestDetails($requestDetails);
+        $shiftRequest->setRequests($requestDetails);
         $shiftRequest->setStatus('submitted');
 
         $this->entityManager->persist($shiftRequest);
@@ -67,7 +67,7 @@ class ShiftRequestController extends AbstractController
         $requests = $repository->createQueryBuilder('sr')
             ->where('sr.user = :user')
             ->setParameter('user', $user)
-            ->orderBy('sr.targetMonth', 'DESC')
+            ->orderBy('sr.month', 'DESC')
             ->getQuery()
             ->getResult();
 
@@ -84,7 +84,7 @@ class ShiftRequestController extends AbstractController
         
         $shiftRequest = $this->entityManager->getRepository(ShiftRequest::class)->findOneBy([
             'user' => $user,
-            'targetMonth' => new \DateTimeImmutable($month . '-01')
+            'month' => $month
         ]);
 
         if (!$shiftRequest) {
@@ -92,7 +92,7 @@ class ShiftRequestController extends AbstractController
         }
 
         return new JsonResponse([
-            'days' => $shiftRequest->getRequestDetails(),
+            'days' => $shiftRequest->getRequests(),
             'status' => $shiftRequest->getStatus()
         ]);
     }

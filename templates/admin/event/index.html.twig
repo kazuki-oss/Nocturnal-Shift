@@ -1,0 +1,96 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}イベント管理{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">イベント管理</h2>
+    <div class="header-actions">
+        <a href="{{ path('admin_event_new') }}" class="btn btn-primary">
+            <i class="mdi mdi-plus"></i> 新規イベント
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>イベント名</th>
+                    <th>タイプ</th>
+                    <th>日時/条件</th>
+                    <th>時間</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                    <tr>
+                        <td>
+                            <span class="color-dot" style="background-color: {{ event.color }}"></span>
+                            {{ event.name }}
+                        </td>
+                        <td>
+                            {% if event.eventType == 'single' %}
+                                <span class="badge badge-secondary">単発</span>
+                            {% elseif event.eventType == 'weekly' %}
+                                <span class="badge badge-info">毎週</span>
+                            {% elseif event.eventType == 'monthly' %}
+                                <span class="badge badge-success">毎月</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if event.eventType == 'single' %}
+                                {{ event.startTime|date('Y/m/d') }}
+                            {% elseif event.eventType == 'weekly' %}
+                                {% set days = ['日', '月', '火', '水', '木', '金', '土'] %}
+                                {{ days[event.dayOfWeek] }}曜日
+                            {% elseif event.eventType == 'monthly' %}
+                                毎月 {{ event.dayOfMonth }}日
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ event.startTime|date('H:i') }} - {{ event.endTime|date('H:i') }}
+                        </td>
+                        <td>
+                            <a href="{{ path('admin_event_edit', {id: event.id}) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="mdi mdi-pencil"></i>
+                            </a>
+                            <form method="post" action="{{ path('admin_event_delete', {id: event.id}) }}" style="display: inline-block;" onsubmit="return confirm('本当に削除しますか？');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="mdi mdi-delete"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">イベントがありません</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: white;
+}
+.badge-secondary { background-color: #6c757d; }
+.badge-info { background-color: #17a2b8; }
+.badge-success { background-color: #28a745; }
+</style>
+{% endblock %}
