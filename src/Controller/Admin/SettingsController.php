@@ -40,7 +40,25 @@ class SettingsController extends AbstractController
         $tenant = $this->tenantResolver->resolve();
         
         $tenant->setName($request->request->get('tenant_name'));
-        // 将来的に追加: 住所、電話番号、営業時間など
+        
+        // 営業時間設定
+        $businessHoursData = $request->request->all('business_hours');
+        if ($businessHoursData) {
+            $businessHours = [];
+            foreach ($businessHoursData as $slot) {
+                if (!empty($slot['start']) && !empty($slot['end'])) {
+                    $businessHours[] = [
+                        'start' => $slot['start'],
+                        'end' => $slot['end']
+                    ];
+                }
+            }
+            $tenant->setBusinessHours($businessHours ?: null);
+        }
+        
+        // 営業曜日設定
+        $businessDays = $request->request->all('business_days');
+        $tenant->setBusinessDays($businessDays ? array_map('intval', $businessDays) : null);
 
         $this->entityManager->flush();
 

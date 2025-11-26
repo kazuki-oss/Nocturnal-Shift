@@ -13,13 +13,25 @@
                 <i class="mdi mdi-view-dashboard"></i>
                 <span>ダッシュボード</span>
             </a>
-            <a href="{{ path('admin_schedule_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_schedule' %}active{% endif %}">
-                <i class="mdi mdi-calendar-month"></i>
-                <span>スケジュール</span>
+            <a href="{{ path('admin_schedule_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_schedule' or app.request.attributes.get('_route') starts with 'admin_shift' %}active{% endif %}">
+                <i class="mdi mdi-calendar-clock"></i>
+                <span>シフト</span>
             </a>
             <a href="{{ path('admin_attendance_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_attendance' %}active{% endif %}">
                 <i class="mdi mdi-clock-check"></i>
-                <span>勤怠</span>
+                <span>勤怠管理</span>
+            </a>
+            <a href="{{ path('admin_event_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_event' %}active{% endif %}">
+                <i class="mdi mdi-calendar-star"></i>
+                <span>イベント</span>
+            </a>
+            <a href="{{ path('admin_drink_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_drink' %}active{% endif %}">
+                <i class="mdi mdi-glass-cocktail"></i>
+                <span>ドリンク</span>
+            </a>
+            <a href="{{ path('admin_shift_generator_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_shift_generator' %}active{% endif %}">
+                <i class="mdi mdi-robot"></i>
+                <span>自動生成</span>
             </a>
             <a href="{{ path('admin_employees_index') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'admin_employees' %}active{% endif %}">
                 <i class="mdi mdi-account-group"></i>

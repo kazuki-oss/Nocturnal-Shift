@@ -1,0 +1,102 @@
+{% extends 'employee/layout.html.twig' %}
+
+{% block title %}ドリンク杯数記録{% endblock %}
+
+{% block employee_content %}
+<div class="page-header">
+    <h2 class="page-title">ドリンク杯数記録</h2>
+    <div class="header-actions">
+        <a href="{{ path('employee_drink_history') }}" class="btn btn-secondary">
+            <i class="mdi mdi-history"></i> 記録履歴
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">本日の記録</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="form-group mb-3">
+                        <label for="date">日付</label>
+                        <input type="date" id="date" name="date" class="form-control" value="{{ 'now'|date('Y-m-d') }}" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="count">杯数</label>
+                        <input type="number" id="count" name="count" class="form-control" min="1" value="1" required>
+                    </div>
+
+                    <div class="form-actions mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="mdi mdi-plus-circle"></i> 記録する
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body">
+                <h3><i class="mdi mdi-glass-cocktail"></i> 今月の実績</h3>
+                <div class="stats-display">
+                    <div class="stat-value">-- 杯</div>
+                    <div class="stat-label">記録履歴で確認できます</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h4 class="mb-3">💡 ヒント</h4>
+                <ul class="tips-list">
+                    <li>毎日記録することで正確な実績が残ります</li>
+                    <li>月間ランキングは管理画面で確認できます</li>
+                    <li>過去の記録は履歴から確認・修正できます</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.stats-display {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+.tips-list {
+    list-style: none;
+    padding: 0;
+}
+.tips-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+.tips-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: bold;
+}
+.w-100 { width: 100%; }
+</style>
+{% endblock %}

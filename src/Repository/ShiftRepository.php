@@ -20,4 +20,23 @@ class ShiftRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Shift::class);
     }
+
+    public function findByMonth(\App\Entity\Tenant $tenant, \DateTimeInterface $month): array
+    {
+        $firstDay = (clone $month)->modify('first day of this month')->setTime(0, 0, 0);
+        $lastDay = (clone $month)->modify('last day of this month')->setTime(23, 59, 59);
+
+        return $this->createQueryBuilder('s')
+            ->join('s.user', 'u')
+            ->where('u.tenant = :tenant')
+            ->andWhere('s.startTime >= :firstDay')
+            ->andWhere('s.startTime <= :lastDay')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('firstDay', $firstDay)
+            ->setParameter('lastDay', $lastDay)
+            ->orderBy('s.startTime', 'ASC')
+            ->addOrderBy('u.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

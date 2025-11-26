@@ -2,6 +2,8 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Attendance;
+use App\Form\AttendanceType;
 use App\Repository\AttendanceRepository;
 use App\Repository\UserRepository;
 use App\Service\TenantResolver;
@@ -23,90 +25,103 @@ class AttendanceManagementController extends AbstractController
     public function index(Request $request, AttendanceRepository $repository, UserRepository $userRepository): Response
     {
         $tenant = $this->tenantResolver->resolve();
-        $date = $request->query->get('date', date('Y-m-d'));
-        $targetDate = new \DateTimeImmutable($date);
-
-        // 全従業員を取得
-        $employees = $userRepository->createQueryBuilder('u')
-            ->where('u.tenant = :tenant')
-            ->setParameter('tenant', $tenant)
-            ->orderBy('u.name', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        // 各従業員の勤怠データを取得
-        $attendanceData = [];
-        foreach ($employees as $employee) {
-            $attendance = $repository->findOneBy([
-                'user' => $employee,
-                'attendanceDate' => $targetDate
-            ]);
-
-            $workingMinutes = 0;
-            $status = 'absent';
-
-            if ($attendance) {
-                if ($attendance->getClockInAt() && $attendance->getClockOutAt()) {
-                    $diff = $attendance->getClockOutAt()->getTimestamp() - $attendance->getClockInAt()->getTimestamp();
-                    $workingMinutes = floor($diff / 60) - ($attendance->getBreakMinutes() ?? 0);
-                    $status = 'finished';
-                } elseif ($attendance->getClockInAt()) {
-                    $status = 'working';
-                }
-            }
-
-            $attendanceData[] = [
-                'employee' => $employee,
-                'attendance' => $attendance,
-                'workingMinutes' => $workingMinutes,
-                'status' => $status
-            ];
+        
+        // フィルター
+        $date = $request->query->get('date');
+        $userId = $request->query->get('user');
+        $status = $request->query->get('status');
+        
+        // デフォルトは当日
+        if (!$date) {
+            $date = (new \DateTime())->format('Y-m-d');
         }
+        
+        $dateObj = new \DateTime($date);
+        
+        // クエリビルダー
+        $qb = $repository->createQueryBuilder('a')
+            ->join('a.user', 'u')
+            ->where('u.tenant = :tenant')
+            ->andWhere('a.attendanceDate = :date')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('date', $dateObj)
+            ->orderBy('u.name', 'ASC');
+        
+        // ユーザーフィルター
+        if ($userId) {
+            $qb->andWhere('u.id = :userId')
+               ->setParameter('userId', $userId);
+        }
+        
+        // ステータスフィルター
+        if ($status === 'incomplete') {
+            $qb->andWhere('a.clockOutAt IS NULL');
+        } elseif ($status === 'complete') {
+            $qb->andWhere('a.clockOutAt IS NOT NULL');
+        }
+        
+        $attendances = $qb->getQuery()->getResult();
+        
+        // 全従業員リスト
+        $users = $userRepository->findBy(['tenant' => $tenant], ['name' => 'ASC']);
 
         return $this->render('admin/attendance/index.html.twig', [
             'tenant' => $tenant,
-            'date' => $targetDate,
-            'attendanceData' => $attendanceData
+            'attendances' => $attendances,
+            'users' => $users,
+            'selectedDate' => $date,
+            'selectedUser' => $userId,
+            'selectedStatus' => $status,
         ]);
     }
 
-    #[Route('/employee/{id}', name: 'admin_attendance_employee', methods: ['GET'])]
-    public function employeeHistory(int $id, AttendanceRepository $repository, UserRepository $userRepository): Response
+    #[Route('/{id}/edit', name: 'admin_attendance_edit', methods: ['GET', 'POST'])]
+    public function editAttendance(Request $request, Attendance $attendance): Response
     {
         $tenant = $this->tenantResolver->resolve();
-        $employee = $userRepository->find($id);
-
-        if (!$employee || $employee->getTenant() !== $tenant) {
-            throw $this->createNotFoundException('従業員が見つかりません。');
+        
+        if ($attendance->getUser()->getTenant() !== $tenant) {
+            throw $this->createNotFoundException('勤怠データが見つかりません。');
         }
 
-        $attendances = $repository->createQueryBuilder('a')
-            ->where('a.user = :user')
-            ->setParameter('user', $employee)
-            ->orderBy('a.attendanceDate', 'DESC')
-            ->setMaxResults(30)
-            ->getQuery()
-            ->getResult();
+        $form = $this->createForm(AttendanceType::class, $attendance);
+        $form->handleRequest($request);
 
-        // 集計データ
-        $totalWorkingMinutes = 0;
-        $totalDays = 0;
-        foreach ($attendances as $attendance) {
-            if ($attendance->getClockInAt() && $attendance->getClockOutAt()) {
-                $diff = $attendance->getClockOutAt()->getTimestamp() - $attendance->getClockInAt()->getTimestamp();
-                $workingMinutes = floor($diff / 60) - ($attendance->getBreakMinutes() ?? 0);
-                $totalWorkingMinutes += $workingMinutes;
-                $totalDays++;
-            }
+        if ($form->isSubmitted() && $form->isValid()) {
+            // 修正履歴を記録
+            $attendance->setLastModifiedAt(new \DateTimeImmutable());
+            $attendance->setLastModifiedBy($this->getUser());
+            
+            $this->entityManager->flush();
+
+            $this->addFlash('success', '勤怠データを修正しました。');
+            return $this->redirectToRoute('admin_attendance_index', ['date' => $attendance->getAttendanceDate()->format('Y-m-d')]);
         }
 
-        return $this->render('admin/attendance/employee.html.twig', [
-            'tenant' => $this->tenantResolver->resolve(),
-            'employee' => $employee,
-            'attendances' => $attendances,
-            'totalWorkingHours' => floor($totalWorkingMinutes / 60),
-            'totalDays' => $totalDays,
-            'avgWorkingHours' => $totalDays > 0 ? floor($totalWorkingMinutes / $totalDays / 60) : 0
+        return $this->render('admin/attendance/edit.html.twig', [
+            'tenant' => $tenant,
+            'attendance' => $attendance,
+            'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/monthly-report', name: 'admin_attendance_monthly_report', methods: ['GET'])]
+    public function monthlyReport(Request $request, AttendanceRepository $repository): Response
+    {
+        $tenant = $this->tenantResolver->resolve();
+        
+        $year = $request->query->getInt('year', (int)date('Y'));
+        $month = $request->query->getInt('month', (int)date('m'));
+        
+        $stats = $repository->getMonthlyStats($tenant, $year, $month);
+        $monthDate = new \DateTime("$year-$month-01");
+
+        return $this->render('admin/attendance/monthly_report.html.twig', [
+            'tenant' => $tenant,
+            'stats' => $stats,
+            'year' => $year,
+            'month' => $month,
+            'monthDate' => $monthDate,
         ]);
     }
 }

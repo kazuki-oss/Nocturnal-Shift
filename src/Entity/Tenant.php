@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\TenantRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TenantRepository::class)]
@@ -20,6 +21,20 @@ class Tenant
 
     #[ORM\Column(length: 255, unique: true)]
     private ?string $domain = null;
+
+    /**
+     * 営業時間帯（複数対応）
+     * 例: [{"start": "11:00", "end": "14:00"}, {"start": "18:00", "end": "23:00"}]
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $businessHours = null;
+
+    /**
+     * 営業曜日（0=日曜, 6=土曜）
+     * 例: [1, 2, 3, 4, 5] = 月〜金
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $businessDays = null;
 
     #[ORM\OneToMany(mappedBy: 'tenant', targetEntity: User::class)]
     private Collection $users;
@@ -78,13 +93,36 @@ class Tenant
 
     public function removeUser(User $user): static
     {
-        if ($this->users->removeElement($user)) {
+        if ($this->users->contains($user)) {
+            $this->users->removeElement($user);
             // set the owning side to null (unless already changed)
             if ($user->getTenant() === $this) {
                 $user->setTenant(null);
             }
         }
 
+        return $this;
+    }
+
+    public function getBusinessHours(): ?array
+    {
+        return $this->businessHours;
+    }
+
+    public function setBusinessHours(?array $businessHours): static
+    {
+        $this->businessHours = $businessHours;
+        return $this;
+    }
+
+    public function getBusinessDays(): ?array
+    {
+        return $this->businessDays;
+    }
+
+    public function setBusinessDays(?array $businessDays): static
+    {
+        $this->businessDays = $businessDays;
         return $this;
     }
 }

@@ -37,6 +37,15 @@ class Attendance
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $notes = null;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastModifiedAt = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    private ?User $lastModifiedBy = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $modificationReason = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -116,6 +125,39 @@ class Attendance
     public function setNotes(?string $notes): static
     {
         $this->notes = $notes;
+        return $this;
+    }
+
+    public function getLastModifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->lastModifiedAt;
+    }
+
+    public function setLastModifiedAt(?\DateTimeImmutable $lastModifiedAt): static
+    {
+        $this->lastModifiedAt = $lastModifiedAt;
+        return $this;
+    }
+
+    public function getLastModifiedBy(): ?User
+    {
+        return $this->lastModifiedBy;
+    }
+
+    public function setLastModifiedBy(?User $lastModifiedBy): static
+    {
+        $this->lastModifiedBy = $lastModifiedBy;
+        return $this;
+    }
+
+    public function getModificationReason(): ?string
+    {
+        return $this->modificationReason;
+    }
+
+    public function setModificationReason(?string $modificationReason): static
+    {
+        $this->modificationReason = $modificationReason;
         return $this;
     }
 }

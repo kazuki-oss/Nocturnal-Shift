@@ -1,0 +1,131 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ event.id ? 'イベント編集' : '新規イベント' }}{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h2 class="page-title">{{ event.id ? 'イベント編集' : '新規イベント' }}</h2>
+    <div class="header-actions">
+        <a href="{{ path('admin_event_index') }}" class="btn btn-secondary">
+            <i class="mdi mdi-arrow-left"></i> 戻る
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form) }}
+            <div class="form-group mb-3">
+                {{ form_label(form.name) }}
+                {{ form_widget(form.name) }}
+                {{ form_errors(form.name) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.eventType) }}
+                {{ form_widget(form.eventType) }}
+                {{ form_errors(form.eventType) }}
+            </div>
+
+            <div id="single-fields" class="type-field">
+                <div class="form-group mb-3">
+                    {{ form_label(form.singleDate) }}
+                    {{ form_widget(form.singleDate) }}
+                    {{ form_errors(form.singleDate) }}
+                </div>
+            </div>
+
+            <div id="weekly-fields" class="type-field" style="display: none;">
+                <div class="form-group mb-3">
+                    {{ form_label(form.dayOfWeek) }}
+                    {{ form_widget(form.dayOfWeek) }}
+                    {{ form_errors(form.dayOfWeek) }}
+                </div>
+            </div>
+
+            <div id="monthly-fields" class="type-field" style="display: none;">
+                <div class="form-group mb-3">
+                    {{ form_label(form.dayOfMonth) }}
+                    {{ form_widget(form.dayOfMonth) }}
+                    {{ form_errors(form.dayOfMonth) }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        {{ form_label(form.startTime) }}
+                        {{ form_widget(form.startTime) }}
+                        {{ form_errors(form.startTime) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        {{ form_label(form.endTime) }}
+                        {{ form_widget(form.endTime) }}
+                        {{ form_errors(form.endTime) }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="recurrence-end" class="type-field" style="display: none;">
+                <div class="form-group mb-3">
+                    {{ form_label(form.recurrenceEndDate) }}
+                    {{ form_widget(form.recurrenceEndDate) }}
+                    {{ form_errors(form.recurrenceEndDate) }}
+                    <small class="text-muted">設定しない場合は無期限になります</small>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.color) }}
+                {{ form_widget(form.color) }}
+                {{ form_errors(form.color) }}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form_label(form.description) }}
+                {{ form_widget(form.description) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div class="form-actions mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="mdi mdi-content-save"></i> 保存
+                </button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+<script>
+function toggleRecurrenceFields(type) {
+    document.querySelectorAll('.type-field').forEach(el => el.style.display = 'none');
+    
+    if (type === 'single') {
+        document.getElementById('single-fields').style.display = 'block';
+    } else {
+        document.getElementById('recurrence-end').style.display = 'block';
+        if (type === 'weekly') {
+            document.getElementById('weekly-fields').style.display = 'block';
+        } else if (type === 'monthly') {
+            document.getElementById('monthly-fields').style.display = 'block';
+        }
+    }
+}
+
+// Initial state
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.querySelector('#event_eventType');
+    if (typeSelect) {
+        toggleRecurrenceFields(typeSelect.value);
+    }
+});
+</script>
+
+<style>
+.form-control-color {
+    width: 100px;
+}
+</style>
+{% endblock %}

@@ -32,9 +32,9 @@
             <i class="mdi mdi-clock-outline"></i>
             <span>勤怠</span>
         </a>
-        <a href="#" class="nav-item">
-            <i class="mdi mdi-account"></i>
-            <span>プロフィール</span>
+        <a href="{{ path('employee_drink_record') }}" class="nav-item {% if app.request.attributes.get('_route') starts with 'employee_drink' %}active{% endif %}">
+            <i class="mdi mdi-glass-cocktail"></i>
+            <span>ドリンク</span>
         </a>
     </nav>
 </div>

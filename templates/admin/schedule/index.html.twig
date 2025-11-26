@@ -5,7 +5,7 @@
 {% block admin_content %}
 <div class="page-header">
     <h2 class="page-title">スケジュール管理</h2>
-    <div>
+    <div class="header-actions">
         <a href="{{ path('admin_schedule_requests') }}" class="btn btn-secondary">
             <i class="mdi mdi-format-list-bulleted"></i> 希望一覧
         </a>
@@ -17,40 +17,16 @@
 {% endfor %}
 
 <div class="card">
-    <div class="calendar-container">
-        <div id="calendar"></div>
-    </div>
-</div>
-
-<!-- イベント詳細モーダル -->
-<div id="event-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modal-title">イベント詳細</h3>
-            <button class="modal-close" onclick="closeModal()">
-                <i class="mdi mdi-close"></i>
-            </button>
-        </div>
-        <div class="modal-body" id="modal-body">
-            <!-- イベント詳細がここに表示されます -->
-        </div>
-    </div>
+    <div id="calendar"></div>
 </div>
 
 <style>
-.calendar-container {
-    padding: 2rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-}
-
 #calendar {
     background: white;
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: 8px;
 }
 
-/* FullCalendar Dark Mode Override */
 .fc {
     color: #1f2937;
 }
@@ -68,84 +44,67 @@
     border-color: #e5e7eb;
 }
 
-.fc-scrollgrid {
-    border-color: #e5e7eb;
-}
-
-.fc-daygrid-day-number {
-    color: #374151;
-}
-
-/* Modal Styles */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: var(--card-bg);
-    border-radius: 12px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-    margin: 0;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 1.5rem;
-    padding: 0;
-}
-
-.modal-body {
-    padding: 1.5rem;
-}
-
-.event-info {
-    margin-bottom: 1rem;
-}
-
-.event-info-label {
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-}
-
-.event-info-value {
-    font-size: 1.125rem;
+.fc .fc-event {
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 0.875rem;
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
+    const calendarEl = document.getElementById('calendar');
     
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    // 営業時間に基づいてnextDayThresholdを計算
+    let nextDayThreshold = '09:00:00'; // デフォルト
+    {% if businessHours|length > 0 %}
+        // 営業時間の最も遅い終了時刻を取得
+        let latestEndTime = null;
+        {% for slot in businessHours %}
+            const endTime = '{{ slot.end }}';
+            if (!latestEndTime || endTime > latestEndTime) {
+                latestEndTime = endTime;
+            }
+        {% endfor %}
+        
+        if (latestEndTime) {
+            // 終了時刻の1時間後をnextDayThresholdに設定
+            const [hours, minutes] = latestEndTime.split(':');
+            let nextHour = (parseInt(hours) + 1) % 24;
+            nextDayThreshold = String(nextHour).padStart(2, '0') + ':' + minutes + ':00';
+        }
+    {% endif %}
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'ja',
+        nextDayThreshold: nextDayThreshold, // 営業日ベースの日付判定
+        {% if businessHours|length > 0 %}
+        // 営業時間に基づいて時間軸を設定（開始6時間前から表示）
+        {% set startParts = businessHours[0].start|split(':') %}
+        {% set endParts = businessHours|last.end|split(':') %}
+        
+        {% set startHour = startParts[0]|number_format %}
+        {% set endHour = endParts[0]|number_format %}
+        
+        {% set displayStartHour = (startHour - 6 + 24) % 24 %}
+        
+        // 終了時間が開始時間より小さい（または同じ）場合は翌日扱いとして24時間を加算
+        {% if endHour <= startHour %}
+            {% set baseEndHour = endHour + 24 %}
+        {% else %}
+            {% set baseEndHour = endHour %}
+        {% endif %}
+        
+        // 営業終了時間の6時間後まで表示
+        {% set displayEndHour = baseEndHour + 6 %}
+        
+        slotMinTime: '{{ "%02d"|format(displayStartHour) }}:00:00',
+        slotMaxTime: '{{ "%02d"|format(displayEndHour) }}:{{ endParts[1] }}:00',
+        {% else %}
+        slotMinTime: '12:00:00',
+        slotMaxTime: '30:00:00', // 翌朝6時
+        {% endif %}
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -157,74 +116,124 @@ document.addEventListener('DOMContentLoaded', function() {
             week: '週',
             day: '日'
         },
+        // 営業時間設定
+        {% if businessHours|length > 0 %}
+        businessHours: [
+            {% for slot in businessHours %}
+            {
+                daysOfWeek: {{ businessDays|json_encode|raw }},
+                startTime: '{{ slot.start }}',
+                endTime: '{{ slot.end }}'
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        {% endif %}
         events: '{{ path('admin_schedule_events') }}',
-        eventClick: function(info) {
-            showEventDetails(info.event);
+        displayEventTime: true,
+        displayEventEnd: true,
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            meridiem: false
         },
-        height: 'auto',
-        contentHeight: 600
+        slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        },
+        eventDidMount: function(info) {
+            const props = info.event.extendedProps;
+            
+            // シフトの場合、ユーザーごとに色を付ける
+            if (props.type === 'shift') {
+                const userName = props.userName || '';
+                const userColor = stringToColor(userName);
+                info.el.style.backgroundColor = userColor;
+                info.el.style.borderColor = darkenColor(userColor, 20);
+                info.el.style.borderLeftWidth = '4px';
+                
+                // アイコン追加
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (titleEl) {
+                    const icon = document.createElement('i');
+                    icon.className = 'mdi mdi-account-clock';
+                    icon.style.marginRight = '4px';
+                    titleEl.prepend(icon);
+                }
+            }
+            // イベントの場合
+            else if (props.type === 'event') {
+                info.el.style.borderLeftWidth = '4px';
+                
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (titleEl) {
+                    const icon = document.createElement('i');
+                    icon.className = 'mdi mdi-calendar-star';
+                    icon.style.marginRight = '4px';
+                    titleEl.prepend(icon);
+                }
+            }
+        },
+        eventContent: function(arg) {
+            // 時間表示の強制（月表示などでも時間を出すため）
+            // ただし、timeGridなどではデフォルトの表示が崩れる可能性があるので、
+            // view.typeで判定するか、シンプルな構造にする
+            
+            const title = arg.event.title;
+            const start = arg.event.start;
+            const end = arg.event.end;
+            
+            let timeText = '';
+            if (arg.event.allDay) {
+                 timeText = '終日';
+            } else if (start && end) {
+                const startHour = String(start.getHours()).padStart(2, '0');
+                const startMin = String(start.getMinutes()).padStart(2, '0');
+                const endHour = String(end.getHours()).padStart(2, '0');
+                const endMin = String(end.getMinutes()).padStart(2, '0');
+                timeText = `${startHour}:${startMin}-${endHour}:${endMin}`;
+            } else if (start) {
+                 const startHour = String(start.getHours()).padStart(2, '0');
+                 const startMin = String(start.getMinutes()).padStart(2, '0');
+                 timeText = `${startHour}:${startMin}`;
+            }
+            
+            // HTML構造をFullCalendarの標準に近づける
+            return { html: `
+                <div class="fc-event-main-frame">
+                    <div class="fc-event-time" style="font-size: 0.85em; font-weight: bold;">${timeText}</div>
+                    <div class="fc-event-title-container">
+                        <div class="fc-event-title fc-sticky">${title}</div>
+                    </div>
+                </div>
+            `};
+        },
+        height: 'auto'
     });
     
     calendar.render();
-});
-
-function showEventDetails(event) {
-    const props = event.extendedProps;
-    const modal = document.getElementById('event-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalBody = document.getElementById('modal-body');
     
-    modalTitle.textContent = event.title;
-    
-    let bodyHTML = `
-        <div class="event-info">
-            <div class="event-info-label">従業員</div>
-            <div class="event-info-value">${props.userName}</div>
-        </div>
-        <div class="event-info">
-            <div class="event-info-label">開始</div>
-            <div class="event-info-value">${event.start.toLocaleString('ja-JP')}</div>
-        </div>
-        <div class="event-info">
-            <div class="event-info-label">終了</div>
-            <div class="event-info-value">${event.end ? event.end.toLocaleString('ja-JP') : '-'}</div>
-        </div>
-        <div class="event-info">
-            <div class="event-info-label">種別</div>
-            <div class="event-info-value">${props.type === 'shift' ? '確定シフト' : 'シフト希望'}</div>
-        </div>
-    `;
-    
-    if (props.type === 'request' && props.status === 'submitted') {
-        bodyHTML += `
-            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
-                <form method="post" action="{{ path('admin_schedule_approve', {id: '__ID__'}) }}" style="flex: 1;">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="mdi mdi-check"></i> 承認
-                    </button>
-                </form>
-                <form method="post" action="{{ path('admin_schedule_reject', {id: '__ID__'}) }}" style="flex: 1;">
-                    <button type="submit" class="btn btn-danger btn-block">
-                        <i class="mdi mdi-close"></i> 却下
-                    </button>
-                </form>
-            </div>
-        `.replace(/__ID__/g, props.requestId);
+    // ユーザー名から色を生成
+    function stringToColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const h = hash % 360;
+        return `hsl(${h}, 70%, 60%)`;
     }
     
-    modalBody.innerHTML = bodyHTML;
-    modal.style.display = 'flex';
-}
-
-function closeModal() {
-    document.getElementById('event-modal').style.display = 'none';
-}
-
-// モーダル外クリックで閉じる
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('event-modal');
-    if (event.target === modal) {
-        closeModal();
+    // 色を暗くする
+    function darkenColor(hslColor, percent) {
+        const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+        if (match) {
+            const h = match[1];
+            const s = match[2];
+            const l = Math.max(0, parseInt(match[3]) - percent);
+            return `hsl(${h}, ${s}%, ${l}%)`;
+        }
+        return hslColor;
     }
 });
 </script>
